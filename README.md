@@ -1,132 +1,109 @@
 # SFIS Employee Directory & Management Web
+> **Course / Program:** DPE Training & Testing (SFIS)  
+> **Repository:** [sfis_project_book_employee_web](https://github.com/dalin-github/sfis_project_book_employee_web.git)
 
-A modern Ruby on Rails web application for managing employees, departmental rosters, contacts, and workforce statistics.
+A full-stack Ruby on Rails application for managing employee profiles, departmental assignments, and workforce directory records using Docker and PostgreSQL.
 
 ---
 
 ## 📋 Table of Contents
-- [Overview](#overview)
-- [Tech Stack & Ruby Version](#tech-stack--ruby-version)
-- [System Dependencies](#system-dependencies)
-- [Configuration & Environment](#configuration--environment)
-- [Setup & Running with Docker (Recommended)](#setup--running-with-docker-recommended)
-- [Database Setup & Initialization](#database-setup--initialization)
-- [Running the Rails Console](#running-the-rails-console)
-- [How to Run the Test Suite](#how-to-run-the-test-suite)
-- [Services & Architecture](#services--architecture)
-- [Deployment Instructions](#deployment-instructions)
+1. [Quick Start (How to Run the Project)](#-quick-start-how-to-run-the-project)
+2. [Technical Specifications](#-technical-specifications)
+3. [Configuration & Environment](#-configuration--environment)
+4. [Database Creation & Initialization](#-database-creation--initialization)
+5. [Running the Test Suite](#-running-the-test-suite)
+6. [Services & Architecture](#-services--architecture)
+7. [Deployment Instructions](#-deployment-instructions)
+8. [Debugging Guide & Common Gotchas](#-debugging-guide--common-gotchas)
+9. [Lessons & Core Concepts Learned](#-lessons--core-concepts-learned)
 
 ---
 
-## 🔍 Overview
-SFIS Employee Directory provides:
-- Employee Directory with live search, filters (department, role), and pagination.
-- Departmental groupings and assignment management.
-- Employee profile modals with contact details, skills, and status tracking.
-- Interactive analytics dashboard (headcount, department breakdown).
+## 🚀 Quick Start (How to Run the Project)
 
----
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- [Git](https://git-scm.com/)
 
-## 🛠 Tech Stack & Ruby Version
-- **Ruby:** `3.2.3` (defined in `.ruby-version` and Docker containers)
-- **Rails:** `8.1.x`
-- **Database:** PostgreSQL `10.0+`
-- **Frontend / Assets:** Propshaft, Hotwire (Turbo & Stimulus), Importmaps, Vanilla CSS Design System
-- **Containerization:** Docker & Docker Compose
-
----
-
-## 💻 System Dependencies
-If running **locally with Docker** (Recommended):
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
-- Git
-
-If running **natively without Docker**:
-- Ruby 3.2.3 (via `rbenv`, `rvm`, or `asdf`)
-- PostgreSQL client libraries (`libpq-dev` / `postgresql`)
-- Bundler (`gem install bundler`)
-
----
-
-## ⚙️ Configuration & Environment
-The app uses Docker environment configurations in `docker-compose.yml`:
-
-| Environment Variable | Default Value | Description |
-| :--- | :--- | :--- |
-| `RAILS_ENV` | `development` | Rails operating environment |
-| `RAILS_MAX_THREADS` | `5` | Puma worker thread count |
-| `DATABASE_URL` | `postgres://postgres:@db/employee_book` | PostgreSQL connection string |
-| `TZ` | `Asia/Phnom_Penh` | Database container timezone |
-
----
-
-## 🚀 Setup & Running with Docker (Recommended)
-
-### 1. Clone the repository
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/dalin-github/sfis_project_book_employee_web.git
 cd sfis_project_book_employee_web
 ```
 
-### 2. Build and launch the containers
+### Step 2: Start the Docker Containers
 ```bash
 docker compose up --build
 ```
-The application will be accessible at **[http://localhost:3000](http://localhost:3000)**.
+This builds and boots up:
+- `employee_book_web`: Rails 8 application on port `3000`
+- `employee_book_db`: PostgreSQL 10 database container
+
+### Step 3: Open the Website
+Open your browser and navigate to:
+👉 **[http://localhost:3000](http://localhost:3000)**
 
 ---
 
-## 🗄 Database Setup & Initialization
+## 🛠 Technical Specifications
 
-### Create database, run migrations, and load sample seed data:
-Open a new terminal tab and run inside the web container:
+- **Ruby Version:** `3.2.3` (specified in `.ruby-version` and Docker environment)
+- **Rails Version:** `8.1.3+`
+- **Database Engine:** PostgreSQL `10.0`
+- **Asset Pipeline:** Propshaft, Importmap, Hotwire (Turbo & Stimulus)
+- **Containerization:** Docker with Docker Compose
 
+---
+
+## ⚙️ Configuration & Environment
+
+Environment settings are configured in `docker-compose.yml`:
+
+| Variable | Value | Purpose |
+| :--- | :--- | :--- |
+| `RAILS_ENV` | `development` | Development environment with live reloading |
+| `RAILS_MAX_THREADS` | `5` | Maximum thread pool size for Puma server |
+| `DATABASE_URL` | `postgres://postgres:@db/employee_book` | Internal Docker connection string to PostgreSQL |
+| `TZ` | `Asia/Phnom_Penh` | Database timezone |
+
+---
+
+## 🗄 Database Creation & Initialization
+
+To initialize or reset the database with seed data:
+
+### 1. Open a terminal inside the running container:
 ```bash
-# Enter the web container
 docker exec -it employee_book_web bash
+```
 
-# Inside the container:
+### 2. Run Database Setup:
+```bash
+# Create database
 bin/rails db:create
+
+# Run pending migrations
 bin/rails db:migrate
+
+# Populate initial sample data
 bin/rails db:seed
 ```
 
-### Sample Seed Data includes:
-- Standard departments: *Engineering, Design, Product, HR, Operations, Marketing*.
-- Pre-populated employee profiles with roles, departments, hobbies, and contact information.
+### Sample Seed Data Details:
+- **Departments:** Engineering, Design, Product, HR, Operations, Marketing.
+- **Employees:** Pre-seeded employee records with roles, departments, hobbies, and contact information.
 
 ---
 
-## 🖥 Running the Rails Console
-To interact with models (`Employee`, `Department`) via IRB:
+## 🧪 Running the Test Suite
 
-```bash
-docker exec -it employee_book_web bin/rails console
-```
-
-Example usage:
-```ruby
-# Query records
-Employee.all
-Employee.where(department_id: 1)
-
-# Check model validations and callbacks
-emp = Employee.new(name: "Rosa", age: 65)
-emp.valid?
-emp.save
-```
-
----
-
-## 🧪 How to Run the Test Suite
-
-Run unit and integration tests using Rails test runner inside the container:
+Run all automated unit and integration tests:
 
 ```bash
 docker exec -it employee_book_web bin/rails test
 ```
 
-To run a specific test file:
+To run a specific test:
 ```bash
 docker exec -it employee_book_web bin/rails test test/models/employee_test.rb
 ```
@@ -134,28 +111,84 @@ docker exec -it employee_book_web bin/rails test test/models/employee_test.rb
 ---
 
 ## 🧩 Services & Architecture
-- **Web Service (`web`):** Rails server running on Puma listening on port `3000:3000`.
-- **Database Service (`db`):** PostgreSQL container storing data in a mounted volume.
-- **Asset Pipeline:** Rails Propshaft with Stimulus controllers loaded via importmaps (`app/javascript/controllers`).
-- **Health Check Endpoint:** `GET /up` returns HTTP 200 when the app and database are healthy.
+
+- **Web Server (`web`):** Puma application server listening on `0.0.0.0:3000` mapped to host port `3000`.
+- **Database (`db`):** PostgreSQL database service connected over internal Docker bridge network (`db`).
+- **Health Check Endpoint:** `GET /up` for uptime monitoring and container status.
 
 ---
 
 ## 🚢 Deployment Instructions
 
-### Using Docker / Production Container:
-1. Build the production Docker image using the root `Dockerfile`:
-   ```bash
-   docker build -t sfis_employee_web:latest .
-   ```
-2. Set the required production environment variables:
-   - `RAILS_MASTER_KEY` (or `SECRET_KEY_BASE`)
-   - `DATABASE_URL` (points to production PostgreSQL)
-   - `RAILS_ENV=production`
+### Production Docker Container:
+```bash
+# Build production image
+docker build -t employee_book_web:latest -f Dockerfile .
 
-### Using Kamal:
-The application includes Kamal configuration for deployment (`.kamal/` and `config/deploy.yml`):
+# Run with production environment variables
+docker run -e RAILS_ENV=production -e DATABASE_URL=postgres://user:pass@host/db -p 3000:3000 employee_book_web:latest
+```
+
+### Kamal Deployment:
+The project is configured for automated deployments with Kamal via `.kamal/` and `config/deploy.yml`:
 ```bash
 bin/kamal setup
 bin/kamal deploy
 ```
+
+---
+
+## 🐞 Debugging Guide & Common Gotchas
+
+### 1. Always Run `reload!` in the Rails Console
+**Problem:** You edited `app/models/employee.rb`, but in `bin/rails c`, changes to validations or callbacks are not working.  
+**Cause:** The Rails console caches Ruby classes in RAM upon boot.  
+**Fix:** Run `reload!` inside the console after every file modification:
+```ruby
+sfis-training-testing(dev):001> reload!
+Reloading...
+=> true
+```
+
+### 2. `NameError: undefined local variable or method 'employee'`
+**Problem:** Typing `employee.errors.full_messages` throws `NameError`.  
+**Cause:** The variable `employee` has not been assigned in your current console session.  
+**Fix:** Assign it first:
+```ruby
+employee = Employee.first
+# or
+employee = Employee.new(name: "Rosa", age: 65)
+```
+
+### 3. Do Not Paste the `=>` Prompt Symbol
+**Problem:** `SyntaxError: unexpected =>` in terminal.  
+**Cause:** `=>` is the output returned by IRB; do not copy/paste lines containing `=>`.
+
+### 4. Database Column Discrepancy (`age` vs `ages`)
+**Notice:** The database schema has both `age` and `ages`. In controllers and seeds, `ages` is permitted. Ensure validations match the attribute you are assigning.
+
+---
+
+## 🎓 Lessons & Core Concepts Learned
+
+### Lesson 1: Active Record Validations
+- Using `validates :attribute, presence: true` to prevent blank values.
+- Using `numericality: { greater_than_or_equal_to: 60 }` to enforce numerical business constraints.
+- Inspecting validation status via `.valid?` and reading error messages using `.errors.full_messages`.
+
+### Lesson 2: Active Record Callbacks & Lifecycle
+- Hooking into the model persistence lifecycle using `before_save` and `after_save`.
+- Understanding execution flow:
+  1. Trigger `.save`
+  2. Runs validations (if fails, halts immediately)
+  3. Executes `before_save` callbacks (`my_first_test`)
+  4. Commits SQL transaction to PostgreSQL (`INSERT INTO / UPDATE`)
+  5. Executes `after_save` callbacks (`my_second_test`)
+
+### Lesson 3: Rails Console (`IRB`) Interactive Testing
+- Testing model logic without needing to click through web forms.
+- Re-initializing and querying models (`Employee.find_by`, `Employee.new`).
+
+### Lesson 4: Dockerized Rails Development
+- Running containerized multi-service applications using `docker-compose.yml`.
+- Executing administrative and debugging commands in a running container via `docker exec -it <container_name> bash`.
