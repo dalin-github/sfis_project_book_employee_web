@@ -1,0 +1,63 @@
+<div class="row justify-content-center my-4">
+  <div class="col-lg-8 col-md-10">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-primary text-white py-3">
+        <h4 class="mb-0 fw-semibold">👤 Add New Employee</h4>
+      </div>
+      <div class="card-body p-4">
+        <% if @employee.errors.any? %>
+          <div class="alert alert-danger" role="alert">
+            <h6 class="alert-heading fw-bold mb-2">⚠️ <%= pluralize(@employee.errors.count, "error") %> prohibited this employee from being saved:</h6>
+            <ul class="mb-0 ps-3">
+              <% @employee.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= form_with(model: @employee, local: true) do |f| %>
+          <div class="mb-3">
+            <%= f.label :name, class: "form-label fw-bold" %>
+            <%= f.text_field :name, class: "form-control", placeholder: "e.g. Sophal Meas", required: true %>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <%= f.label :ages, "Age", class: "form-label fw-bold" %>
+              <%= f.number_field :ages, class: "form-control", placeholder: "e.g. 28", min: 18 %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :gender, class: "form-label fw-bold" %>
+              <%= f.select :gender, ["Male", "Female", "Other"], { prompt: "-- Select Gender --" }, class: "form-select" %>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <%= f.label :role, class: "form-label fw-bold" %>
+              <%= f.text_field :role, class: "form-control", placeholder: "e.g. Software Engineer" %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :department_id, "Department", class: "form-label fw-bold" %>
+              <%= f.collection_select :department_id, @departments, :id, :name, { prompt: "-- Select Department --" }, class: "form-select" %>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <%= f.label :hobbies, "Hobbies & Skills", class: "form-label fw-bold" %>
+            <%= f.text_field :hobbies, class: "form-control", placeholder: "e.g. Ruby, React, Docker, Swimming" %>
+            <div class="form-text">Comma-separated skills and interests.</div>
+          </div>
+
+          <div class="d-flex justify-content-end pt-2 border-top">
+            <%= link_to "Cancel", employees_path, class: "btn btn-outline-secondary me-2 px-4" %>
+            <%= f.submit "Create Employee", class: "btn btn-primary px-4 fw-semibold" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

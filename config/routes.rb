@@ -11,6 +11,5 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "employees#index"
-  # get "/employees", to: "employees#index"
-  get "/employees", to: "employees#index"
+  resources :employees
 end

@@ -1,5 +1,9 @@
 FROM ruby:3.2.3
 WORKDIR /usr/src/app
 
+RUN apt-get update && \
+    apt-get install -y nodejs && \
+    gem install bundler
+
 COPY . .
 RUN bundle install

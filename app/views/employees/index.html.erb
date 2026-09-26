@@ -2046,17 +2046,35 @@
 
   function deleteHubEmployee(elem) {
     const name = elem.getAttribute('data-name') || 'this member';
-    if (confirm(`Remove ${name} from employee records?`)) {
-      const id = elem.getAttribute('data-id');
-      document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.remove());
+    const id = elem.getAttribute('data-id');
+    if (!id) return;
 
-      const deckTotal = document.getElementById('deckTotal');
-      if (deckTotal) deckTotal.textContent = Math.max(0, parseInt(deckTotal.textContent || '1') - 1);
-      const sbTotal = document.getElementById('sidebarTotalCount');
-      if (sbTotal) sbTotal.textContent = Math.max(0, parseInt(sbTotal.textContent || '1') - 1);
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      fetch(`/employees/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Accept': 'application/json'
+        }
+      }).then(response => {
+        if (response.ok) {
+          document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.remove());
 
-      showHubToast(`Removed ${name}`);
-      filterHubEmployees();
+          const deckTotal = document.getElementById('deckTotal');
+          if (deckTotal) deckTotal.textContent = Math.max(0, parseInt(deckTotal.textContent || '1') - 1);
+          const sbTotal = document.getElementById('sidebarTotalCount');
+          if (sbTotal) sbTotal.textContent = Math.max(0, parseInt(sbTotal.textContent || '1') - 1);
+
+          showHubToast(`Deleted ${name} successfully!`);
+          filterHubEmployees();
+        } else {
+          alert('Failed to delete employee from database.');
+        }
+      }).catch(err => {
+        console.error(err);
+        alert('Network error while deleting employee.');
+      });
     }
   }
 

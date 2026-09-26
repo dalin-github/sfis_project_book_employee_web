@@ -54,9 +54,15 @@ class EmployeesController < ApplicationController
   private
 
   def employee_params
-    params.require(:employee).permit(:name, :ages, :role, :gender, :hobbies, :department_id)
+    p = params.require(:employee).permit(:name, :age, :ages, :role, :gender, :hobbies, :department_id)
+    p[:ages] ||= p[:age] if p[:age].present?
+    p[:age] ||= p[:ages] if p[:ages].present?
+    p
   rescue ActionController::ParameterMissing
-    params.permit(:name, :ages, :role, :gender, :hobbies, :department_id)
+    p = params.permit(:name, :age, :ages, :role, :gender, :hobbies, :department_id)
+    p[:ages] ||= p[:age] if p[:age].present?
+    p[:age] ||= p[:ages] if p[:ages].present?
+    p
   end
 end
 
