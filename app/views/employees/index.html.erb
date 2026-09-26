@@ -1,0 +1,2097 @@
+<!-- Modern SaaS-style Employee Directory & Management Hub -->
+<div class="emp-hub-layout">
+  <!-- Sidebar Navigation -->
+  <aside class="hub-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="brand-title-text">WorkPulse</h2>
+        <span class="brand-sub-text">People Operations</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-menu">
+      <div class="menu-section-label">MAIN WORKSPACE</div>
+      <a href="/employees" class="menu-item active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>All Employees</span>
+        <span class="menu-count" id="sidebarTotalCount"><%= @employees.length %></span>
+      </a>
+
+      <a href="#" class="menu-item" onclick="filterByQuickScope('Engineering', event)">
+        <span class="menu-dot eng-dot"></span>
+        <span>Engineering</span>
+        <span class="menu-count"><%= @employees.count { |e| e[:department] == 'Engineering' } %></span>
+      </a>
+
+      <a href="#" class="menu-item" onclick="filterByQuickScope('Design', event)">
+        <span class="menu-dot des-dot"></span>
+        <span>Product & Design</span>
+        <span class="menu-count"><%= @employees.count { |e| ['Design', 'Product'].include?(e[:department]) } %></span>
+      </a>
+
+      <a href="#" class="menu-item" onclick="filterByQuickScope('HR', event)">
+        <span class="menu-dot hr-dot"></span>
+        <span>HR & People</span>
+        <span class="menu-count"><%= @employees.count { |e| ['HR', 'Operations', 'Marketing'].include?(e[:department]) } %></span>
+      </a>
+
+      <div class="menu-section-label" style="margin-top: 24px;">SYSTEM STATUS</div>
+      <div class="quick-system-card">
+        <div class="system-status-indicator">
+          <span class="pulse-status-dot"></span>
+          <span>Workspace Synced</span>
+        </div>
+        <p class="system-info-text"><%= @employees.count { |e| e[:status] == 'Active' } %> of <%= @employees.length %> staff currently on active duty today.</p>
+      </div>
+    </nav>
+
+    <div class="sidebar-user-footer">
+      <div class="user-footer-avatar">HR</div>
+      <div class="user-footer-meta">
+        <div class="user-footer-name">Admin Console</div>
+        <div class="user-footer-role">workspace_admin</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Workspace -->
+  <main class="hub-main-body">
+    <!-- Top Action Bar -->
+    <header class="hub-topbar">
+      <div class="search-container">
+        <svg class="topbar-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="hubSearchInput" placeholder="Quick find by employee name, role, tech stack, email..." oninput="filterHubEmployees()" autocomplete="off">
+        <span class="search-key-hint">ESC to clear</span>
+      </div>
+
+      <div class="topbar-controls">
+        <button class="btn btn-outline" onclick="exportDirectoryCSV()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export CSV</span>
+        </button>
+
+        <button class="btn btn-add-member" onclick="openCreateModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New Employee</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Banner & Live Stats Deck -->
+    <div class="hub-hero-banner">
+      <div class="banner-title-area">
+        <h1 class="hub-page-title">Employee Directory</h1>
+        <p class="hub-page-desc">Comprehensive staff roster, departmental assignments, contacts, and active status.</p>
+      </div>
+
+      <div class="hub-stats-row">
+        <div class="stat-pill-box">
+          <div class="stat-pill-label">Total Headcount</div>
+          <div class="stat-pill-number" id="deckTotal"><%= @employees.length %></div>
+        </div>
+
+        <div class="stat-pill-box">
+          <div class="stat-pill-label">Active on Duty</div>
+          <div class="stat-pill-number text-success" id="deckActive"><%= @employees.count { |e| e[:status] == "Active" } %></div>
+        </div>
+
+        <div class="stat-pill-box">
+          <div class="stat-pill-label">On Leave</div>
+          <div class="stat-pill-number text-warning" id="deckLeave"><%= @employees.count { |e| e[:status] == "On Leave" } %></div>
+        </div>
+
+        <div class="stat-pill-box">
+          <div class="stat-pill-label">Departments</div>
+          <div class="stat-pill-number text-primary"><%= @employees.map { |e| e[:department] }.uniq.length %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar & View Toggle Strip -->
+    <section class="hub-toolbar">
+      <div class="toolbar-left">
+        <div class="department-tabs" id="departmentTabGroup">
+          <button class="dept-tab active" onclick="selectDepartmentTab('all', this)">All Teams</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('Engineering', this)">Engineering</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('Design', this)">Design</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('Product', this)">Product</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('HR', this)">HR</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('Operations', this)">Operations</button>
+          <button class="dept-tab" onclick="selectDepartmentTab('Marketing', this)">Marketing</button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Status select -->
+        <select id="hubStatusFilter" class="hub-dropdown" onchange="filterHubEmployees()">
+          <option value="all">All Statuses</option>
+          <option value="Active">Active Only</option>
+          <option value="On Leave">On Leave Only</option>
+        </select>
+
+        <!-- View Mode Switcher -->
+        <div class="view-mode-pill">
+          <button class="mode-toggle-btn active" id="btnModeGrid" onclick="switchHubView('grid')" title="Cards View">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <button class="mode-toggle-btn" id="btnModeTable" onclick="switchHubView('table')" title="Table View">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results count bar -->
+    <div class="hub-status-subbar">
+      <span class="status-count-text">
+        Showing <strong id="hubVisibleCount"><%= @employees.length %></strong> team members
+      </span>
+    </div>
+
+    <!-- Empty State -->
+    <div id="hubEmptyState" class="hub-empty-state" style="display: none;">
+      <div class="empty-icon-circle">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </div>
+      <h3>No staff members found</h3>
+      <p>Try adjusting your search criteria, department tab, or status filter.</p>
+      <button class="btn btn-outline" onclick="resetHubFilters()">Reset All Filters</button>
+    </div>
+
+    <!-- 1. Grid Cards Mode -->
+    <div class="hub-cards-grid" id="hubCardsGrid">
+      <% @employees.each do |emp| %>
+        <div class="hub-emp-card"
+          data-id="<%= emp[:id] %>"
+          data-name="<%= emp[:name] %>"
+          data-role="<%= emp[:role] %>"
+          data-dept="<%= emp[:department] %>"
+          data-status="<%= emp[:status] %>"
+          data-email="<%= emp[:email] %>"
+          data-phone="<%= emp[:phone] %>"
+          data-location="<%= emp[:location] %>"
+          data-joindate="<%= emp[:join_date] %>"
+          data-skills="<%= emp[:skills]&.join(', ') %>"
+          data-bio="<%= emp[:bio] %>"
+          data-avatarcolor="<%= emp[:avatar_color] %>">
+          
+          <div class="card-accent-bar" style="background: <%= emp[:avatar_color] %>;"></div>
+
+          <div class="card-inner-content">
+            <div class="card-top-row">
+              <div class="card-avatar" style="background: <%= emp[:avatar_color] %>;">
+                <%= emp[:name].split.map(&:first).join.upcase %>
+              </div>
+              <span class="status-chip <%= emp[:status] == 'Active' ? 'status-active' : 'status-leave' %>">
+                <span class="chip-dot"></span>
+                <%= emp[:status] %>
+              </span>
+            </div>
+
+            <div class="card-profile-meta">
+              <h3 class="card-emp-name" onclick="peekEmployeeProfile(this.closest('.hub-emp-card'))"><%= emp[:name] %></h3>
+              <p class="card-emp-role"><%= emp[:role] %></p>
+              
+              <div class="card-badge-row">
+                <span class="dept-badge badge-<%= emp[:department].downcase %>"><%= emp[:department] %></span>
+                <% if emp[:join_date].present? %>
+                  <span class="joined-badge"><%= emp[:join_date] %></span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Skills chips -->
+            <% if emp[:skills].present? %>
+              <div class="card-skills-row">
+                <% emp[:skills].take(3).each do |s| %>
+                  <span class="skill-tag"><%= s %></span>
+                <% end %>
+                <% if emp[:skills].length > 3 %>
+                  <span class="skill-tag skill-more">+<%= emp[:skills].length - 3 %></span>
+                <% end %>
+              </div>
+            <% end %>
+
+            <div class="card-info-list">
+              <a href="mailto:<%= emp[:email] %>" class="card-info-item" title="Send Email">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <span><%= emp[:email] %></span>
+              </a>
+
+              <div class="card-info-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span><%= emp[:location] %></span>
+              </div>
+            </div>
+
+            <div class="card-bottom-actions">
+              <button class="btn-card-primary" onclick="peekEmployeeProfile(this.closest('.hub-emp-card'))">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Profile
+              </button>
+              <button class="btn-card-icon" onclick="openEditModal(this.closest('.hub-emp-card'))" title="Edit Employee">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button class="btn-card-icon delete-icon" onclick="deleteHubEmployee(this.closest('.hub-emp-card'))" title="Delete Employee">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 2. Table Mode -->
+    <div class="hub-table-wrapper" id="hubTableWrapper" style="display: none;">
+      <table class="hub-modern-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Job Role</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="hubTableBody">
+          <% @employees.each do |emp| %>
+            <tr class="hub-table-row"
+              data-id="<%= emp[:id] %>"
+              data-name="<%= emp[:name] %>"
+              data-role="<%= emp[:role] %>"
+              data-dept="<%= emp[:department] %>"
+              data-status="<%= emp[:status] %>"
+              data-email="<%= emp[:email] %>"
+              data-phone="<%= emp[:phone] %>"
+              data-location="<%= emp[:location] %>"
+              data-joindate="<%= emp[:join_date] %>"
+              data-skills="<%= emp[:skills]&.join(', ') %>"
+              data-bio="<%= emp[:bio] %>"
+              data-avatarcolor="<%= emp[:avatar_color] %>">
+              
+              <td>
+                <div class="t-user-cell" onclick="peekEmployeeProfile(this.closest('.hub-table-row'))">
+                  <div class="t-avatar" style="background: <%= emp[:avatar_color] %>;">
+                    <%= emp[:name].split.map(&:first).join.upcase %>
+                  </div>
+                  <div>
+                    <div class="t-name"><%= emp[:name] %></div>
+                    <div class="t-email"><%= emp[:email] %></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="dept-badge badge-<%= emp[:department].downcase %>"><%= emp[:department] %></span>
+              </td>
+              <td class="font-600"><%= emp[:role] %></td>
+              <td class="text-subtle"><%= emp[:location] %></td>
+              <td>
+                <span class="status-chip <%= emp[:status] == 'Active' ? 'status-active' : 'status-leave' %>">
+                  <span class="chip-dot"></span>
+                  <%= emp[:status] %>
+                </span>
+              </td>
+              <td class="text-subtle"><%= emp[:join_date] || 'N/A' %></td>
+              <td class="text-right">
+                <div class="t-actions">
+                  <button class="t-action-btn" onclick="peekEmployeeProfile(this.closest('.hub-table-row'))">View</button>
+                  <button class="t-action-btn" onclick="openEditModal(this.closest('.hub-table-row'))">Edit</button>
+                  <button class="t-action-btn delete-btn" onclick="deleteHubEmployee(this.closest('.hub-table-row'))">Delete</button>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Modal: Quick Add / Edit Employee -->
+<div id="hubFormModal" class="hub-modal-backdrop" onclick="closeHubModalIfBackdrop(event)">
+  <div class="hub-modal-window">
+    <div class="modal-top-bar">
+      <div>
+        <h3 id="modalHeadingText" class="m-title">Add New Employee</h3>
+        <p class="m-desc" id="modalDescText">Fill out the fields below to register a new member.</p>
+      </div>
+      <button class="m-close" onclick="closeHubModal()">&times;</button>
+    </div>
+
+    <form id="hubForm" onsubmit="submitHubEmployee(event)">
+      <input type="hidden" id="hubEmpId" value="">
+
+      <div class="m-grid-2">
+        <div class="m-field">
+          <label for="hubName">Full Name <span class="req">*</span></label>
+          <input type="text" id="hubName" placeholder="e.g. Sopheak Chan" required>
+        </div>
+
+        <div class="m-field">
+          <label for="hubRole">Position / Role <span class="req">*</span></label>
+          <input type="text" id="hubRole" placeholder="e.g. Senior Backend Engineer" required>
+        </div>
+      </div>
+
+      <div class="m-grid-2">
+        <div class="m-field">
+          <label for="hubDept">Department <span class="req">*</span></label>
+          <select id="hubDept" required>
+            <option value="Engineering">Engineering</option>
+            <option value="Design">Design</option>
+            <option value="Product">Product</option>
+            <option value="HR">HR</option>
+            <option value="Operations">Operations</option>
+            <option value="Marketing">Marketing</option>
+          </select>
+        </div>
+
+        <div class="m-field">
+          <label for="hubStatus">Status <span class="req">*</span></label>
+          <select id="hubStatus" required>
+            <option value="Active">Active on Duty</option>
+            <option value="On Leave">On Leave</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="m-grid-2">
+        <div class="m-field">
+          <label for="hubEmail">Company Email <span class="req">*</span></label>
+          <input type="email" id="hubEmail" placeholder="sopheak.c@company.kh" required>
+        </div>
+
+        <div class="m-field">
+          <label for="hubPhone">Phone Number</label>
+          <input type="tel" id="hubPhone" placeholder="+855 12 345 678">
+        </div>
+      </div>
+
+      <div class="m-grid-2">
+        <div class="m-field">
+          <label for="hubLocation">Work Location <span class="req">*</span></label>
+          <input type="text" id="hubLocation" placeholder="Phnom Penh" value="Phnom Penh" required>
+        </div>
+
+        <div class="m-field">
+          <label for="hubJoinDate">Join Date</label>
+          <input type="text" id="hubJoinDate" placeholder="Sep 2026" value="Sep 2026">
+        </div>
+      </div>
+
+      <div class="m-field">
+        <label for="hubSkills">Skills & Tech Stack (comma separated)</label>
+        <input type="text" id="hubSkills" placeholder="Ruby, Rails, PostgreSQL, Docker, React">
+      </div>
+
+      <div class="m-field">
+        <label for="hubBio">Bio / Responsibilities</label>
+        <textarea id="hubBio" rows="2" placeholder="Brief summary of their role and focus areas..."></textarea>
+      </div>
+
+      <div class="m-actions">
+        <button type="button" class="btn btn-outline" onclick="closeHubModal()">Cancel</button>
+        <button type="submit" class="btn btn-add-member" id="hubSubmitBtn">Save Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Slide-Out Profile Detail Drawer -->
+<div id="hubDrawerBackdrop" class="hub-modal-backdrop" onclick="closeDrawerIfBackdrop(event)">
+  <div class="hub-drawer-window">
+    <div class="drawer-header" id="drawerBanner">
+      <button class="drawer-close" onclick="closeHubDrawer()">&times;</button>
+      <div class="drawer-hero">
+        <div class="drawer-avatar" id="drawerAvatar">SC</div>
+        <div>
+          <h2 class="drawer-name" id="drawerName">Sopheak Chan</h2>
+          <p class="drawer-role" id="drawerRole">Senior Backend Engineer</p>
+          <div class="drawer-badges">
+            <span class="status-chip status-active" id="drawerStatusChip">
+              <span class="chip-dot"></span>
+              <span id="drawerStatus">Active</span>
+            </span>
+            <span class="dept-badge" id="drawerDept">Engineering</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+      <div class="drawer-group">
+        <h4 class="drawer-group-title">ABOUT</h4>
+        <p class="drawer-bio-text" id="drawerBio">No bio information provided.</p>
+      </div>
+
+      <div class="drawer-group">
+        <h4 class="drawer-group-title">CONTACT & LOCATION</h4>
+        <div class="drawer-contact-cards">
+          <div class="contact-card">
+            <span class="c-label">Email</span>
+            <a href="#" id="drawerEmail" class="c-val link-val">sopheak.c@company.kh</a>
+          </div>
+          <div class="contact-card">
+            <span class="c-label">Phone</span>
+            <span id="drawerPhone" class="c-val">+855 12 345 678</span>
+          </div>
+          <div class="contact-card">
+            <span class="c-label">Location</span>
+            <span id="drawerLocation" class="c-val">Phnom Penh</span>
+          </div>
+          <div class="contact-card">
+            <span class="c-label">Joined</span>
+            <span id="drawerJoinDate" class="c-val">Sep 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-group">
+        <h4 class="drawer-group-title">SKILLS & TECHNOLOGIES</h4>
+        <div class="drawer-skills-box" id="drawerSkillsContainer"></div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn btn-outline" onclick="closeHubDrawer()">Close</button>
+      <button class="btn btn-add-member" id="drawerEditBtn">Edit Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Alert -->
+<div id="hubToast" class="hub-toast-alert">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+  <span id="hubToastMsg">Updated successfully!</span>
+</div>
+
+<!-- Interface CSS Styles -->
+<style>
+  :root {
+    --hub-bg: #f4f6fb;
+    --hub-card-bg: #ffffff;
+    --hub-sidebar-bg: #0f172a;
+    --hub-sidebar-text: #94a3b8;
+    --hub-primary: #4f46e5;
+    --hub-primary-hover: #4338ca;
+    --hub-text-dark: #0f172a;
+    --hub-text-muted: #64748b;
+    --hub-border: #e2e8f0;
+    --hub-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Main Shell Layout */
+  .emp-hub-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--hub-bg);
+  }
+
+  /* Sidebar */
+  .hub-sidebar {
+    width: 260px;
+    background: var(--hub-sidebar-bg);
+    color: var(--hub-sidebar-text);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    border-right: 1px solid #1e293b;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  @media (max-width: 900px) {
+    .hub-sidebar {
+      display: none;
+    }
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .brand-badge-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  }
+
+  .brand-title-text {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-sub-text {
+    font-size: 0.725rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .sidebar-menu {
+    flex: 1;
+    padding: 20px 14px;
+    overflow-y: auto;
+  }
+
+  .menu-section-label {
+    font-size: 0.675rem;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.08em;
+    padding: 0 10px;
+    margin-bottom: 10px;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.15s ease;
+  }
+
+  .menu-item:hover {
+    background: #1e293b;
+    color: #ffffff;
+  }
+
+  .menu-item.active {
+    background: #1e293b;
+    color: #ffffff;
+    box-shadow: inset 3px 0 0 #6366f1;
+  }
+
+  .menu-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    background: #1e293b;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    color: #cbd5e1;
+  }
+
+  .menu-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .eng-dot { background: #6366f1; }
+  .des-dot { background: #06b6d4; }
+  .hr-dot { background: #f59e0b; }
+
+  .quick-system-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px;
+    margin: 10px;
+  }
+
+  .system-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #10b981;
+    margin-bottom: 6px;
+  }
+
+  .pulse-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+
+  .system-info-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+
+  .sidebar-user-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-footer-avatar {
+    width: 34px;
+    height: 34px;
+    background: #334155;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .user-footer-name {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+
+  .user-footer-role {
+    font-size: 0.725rem;
+    color: #64748b;
+  }
+
+  /* Main Body */
+  .hub-main-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0 32px 64px 32px;
+  }
+
+  @media (max-width: 768px) {
+    .hub-main-body {
+      padding: 0 16px 48px 16px;
+    }
+  }
+
+  /* Topbar */
+  .hub-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--hub-border);
+    margin-bottom: 24px;
+  }
+
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .topbar-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+  }
+
+  .search-container input {
+    width: 100%;
+    padding: 10px 14px 10px 42px;
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .search-container input:focus {
+    border-color: var(--hub-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+
+  .search-key-hint {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .topbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-outline {
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    color: var(--hub-text-dark);
+  }
+
+  .btn-outline:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  .btn-add-member {
+    background: var(--hub-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+  }
+
+  .btn-add-member:hover {
+    background: var(--hub-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Hero Banner & Stats */
+  .hub-hero-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .hub-page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--hub-text-dark);
+  }
+
+  .hub-page-desc {
+    font-size: 0.875rem;
+    color: var(--hub-text-muted);
+    margin-top: 2px;
+  }
+
+  .hub-stats-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill-box {
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    min-width: 120px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+
+  .stat-pill-label {
+    font-size: 0.725rem;
+    font-weight: 600;
+    color: var(--hub-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-pill-number {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--hub-text-dark);
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+
+  .text-success { color: #10b981 !important; }
+  .text-warning { color: #f59e0b !important; }
+  .text-primary { color: #6366f1 !important; }
+
+  /* Toolbar */
+  .hub-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .department-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .dept-tab {
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--hub-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .dept-tab:hover {
+    background: #f8fafc;
+    color: var(--hub-text-dark);
+  }
+
+  .dept-tab.active {
+    background: var(--hub-text-dark);
+    color: #ffffff;
+    border-color: var(--hub-text-dark);
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hub-dropdown {
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--hub-text-dark);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .view-mode-pill {
+    display: flex;
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    padding: 2px;
+  }
+
+  .mode-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--hub-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  .mode-toggle-btn.active {
+    background: #f1f5f9;
+    color: var(--hub-primary);
+  }
+
+  .hub-status-subbar {
+    font-size: 0.825rem;
+    color: var(--hub-text-muted);
+    margin-bottom: 20px;
+  }
+
+  /* Grid Cards */
+  .hub-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 20px;
+  }
+
+  .hub-emp-card {
+    background: var(--hub-card-bg);
+    border: 1px solid var(--hub-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--hub-shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hub-emp-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.1);
+  }
+
+  .card-accent-bar {
+    height: 4px;
+    width: 100%;
+  }
+
+  .card-inner-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.725rem;
+    font-weight: 700;
+  }
+
+  .chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .status-active {
+    background: #dcfce7;
+    color: #166534;
+  }
+  .status-active .chip-dot { background: #22c55e; }
+
+  .status-leave {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .status-leave .chip-dot { background: #f59e0b; }
+
+  .card-profile-meta {
+    margin-bottom: 12px;
+  }
+
+  .card-emp-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--hub-text-dark);
+    cursor: pointer;
+    line-height: 1.3;
+    transition: color 0.15s ease;
+  }
+
+  .card-emp-name:hover {
+    color: var(--hub-primary);
+  }
+
+  .card-emp-role {
+    font-size: 0.85rem;
+    color: var(--hub-text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .card-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .dept-badge {
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-engineering { background: #e0e7ff; color: #3730a3; }
+  .badge-design { background: #cffafe; color: #0e7490; }
+  .badge-product { background: #fce7f3; color: #9d174d; }
+  .badge-hr { background: #fef3c7; color: #92400e; }
+  .badge-operations { background: #ede9fe; color: #5b21b6; }
+  .badge-marketing { background: #ffe4e6; color: #9f1239; }
+
+  .joined-badge {
+    font-size: 0.725rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .card-skills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .skill-tag {
+    font-size: 0.725rem;
+    font-weight: 500;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .skill-more {
+    font-weight: 700;
+    color: #0f172a;
+    background: #e2e8f0;
+  }
+
+  .card-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.825rem;
+    color: var(--hub-text-muted);
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    margin-top: auto;
+  }
+
+  .card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-info-item:hover {
+    color: var(--hub-primary);
+  }
+
+  .card-bottom-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .btn-card-primary {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid var(--hub-border);
+    padding: 8px;
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: var(--hub-text-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .btn-card-primary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .btn-card-icon {
+    width: 34px;
+    height: 34px;
+    background: #f8fafc;
+    border: 1px solid var(--hub-border);
+    border-radius: 6px;
+    color: var(--hub-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .btn-card-icon:hover {
+    background: #f1f5f9;
+    color: var(--hub-text-dark);
+  }
+
+  .btn-card-icon.delete-icon:hover {
+    background: #fef2f2;
+    color: #ef4444;
+    border-color: #fecaca;
+  }
+
+  /* Modern Table */
+  .hub-table-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--hub-border);
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: var(--hub-shadow);
+  }
+
+  .hub-modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  .hub-modern-table th {
+    background: #f8fafc;
+    padding: 14px 18px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--hub-border);
+    text-align: left;
+  }
+
+  .hub-modern-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--hub-border);
+    vertical-align: middle;
+  }
+
+  .hub-modern-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .t-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .t-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .t-name {
+    font-weight: 700;
+    color: var(--hub-text-dark);
+  }
+
+  .t-email {
+    font-size: 0.775rem;
+    color: var(--hub-text-muted);
+  }
+
+  .t-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .t-action-btn {
+    background: #f8fafc;
+    border: 1px solid var(--hub-border);
+    padding: 5px 10px;
+    font-size: 0.775rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .t-action-btn:hover {
+    background: #f1f5f9;
+  }
+
+  .t-action-btn.delete-btn:hover {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+
+  .font-600 { font-weight: 600; }
+  .text-subtle { color: var(--hub-text-muted); }
+  .text-right { text-align: right; }
+
+  /* Empty State */
+  .hub-empty-state {
+    background: #ffffff;
+    border: 2px dashed var(--hub-border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    max-width: 440px;
+    margin: 40px auto;
+  }
+
+  .empty-icon-circle {
+    width: 64px;
+    height: 64px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+  }
+
+  .hub-empty-state h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .hub-empty-state p {
+    font-size: 0.875rem;
+    color: var(--hub-text-muted);
+    margin-bottom: 18px;
+  }
+
+  /* Modals and Drawer */
+  .hub-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .hub-modal-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .hub-modal-window {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    padding: 28px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .m-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--hub-text-dark);
+  }
+
+  .m-desc {
+    font-size: 0.825rem;
+    color: var(--hub-text-muted);
+  }
+
+  .m-close {
+    background: transparent;
+    border: none;
+    font-size: 1.6rem;
+    color: var(--hub-text-muted);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .m-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .m-field {
+    margin-bottom: 14px;
+  }
+
+  .m-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 5px;
+  }
+
+  .req { color: #ef4444; }
+
+  .m-field input,
+  .m-field select,
+  .m-field textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .m-field input:focus,
+  .m-field select:focus,
+  .m-field textarea:focus {
+    border-color: var(--hub-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+
+  .m-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hub-border);
+  }
+
+  /* Drawer Window */
+  .hub-drawer-window {
+    background: #ffffff;
+    width: 100%;
+    max-width: 480px;
+    height: 100vh;
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hub-modal-backdrop.open .hub-drawer-window {
+    transform: translateX(0);
+  }
+
+  .drawer-header {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #ffffff;
+    padding: 28px 24px;
+    position: relative;
+  }
+
+  .drawer-close {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+
+  .drawer-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .drawer-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .drawer-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .drawer-role {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .drawer-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .drawer-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  .drawer-group {
+    margin-bottom: 24px;
+  }
+
+  .drawer-group-title {
+    font-size: 0.725rem;
+    font-weight: 800;
+    color: var(--hub-text-muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .drawer-bio-text {
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+  }
+
+  .drawer-contact-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-card {
+    background: #f8fafc;
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .c-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--hub-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .c-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--hub-text-dark);
+  }
+
+  .link-val {
+    color: var(--hub-primary);
+    text-decoration: none;
+  }
+
+  .drawer-skills-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .drawer-skills-box .skill-tag {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    background: #e0e7ff;
+    color: #3730a3;
+    font-weight: 600;
+  }
+
+  .drawer-footer {
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--hub-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Toast */
+  .hub-toast-alert {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 200;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hub-toast-alert.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .hub-toast-alert svg {
+    color: #10b981;
+  }
+</style>
+
+<!-- JavaScript Hub Logic -->
+<script>
+  let hubActiveDept = 'all';
+  let hubActiveView = 'grid';
+  let hubEditingElem = null;
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const searchInput = document.getElementById('hubSearchInput');
+      if (searchInput && document.activeElement === searchInput) {
+        searchInput.value = '';
+        filterHubEmployees();
+      }
+      closeHubModal();
+      closeHubDrawer();
+    }
+  });
+
+  function filterHubEmployees() {
+    const query = document.getElementById('hubSearchInput').value.toLowerCase().trim();
+    const statusVal = document.getElementById('hubStatusFilter').value;
+
+    const cards = document.querySelectorAll('.hub-emp-card');
+    const rows = document.querySelectorAll('.hub-table-row');
+    let visibleCount = 0;
+
+    cards.forEach((card, idx) => {
+      const name = (card.getAttribute('data-name') || '').toLowerCase();
+      const role = (card.getAttribute('data-role') || '').toLowerCase();
+      const dept = card.getAttribute('data-dept') || '';
+      const status = card.getAttribute('data-status') || '';
+      const email = (card.getAttribute('data-email') || '').toLowerCase();
+      const skills = (card.getAttribute('data-skills') || '').toLowerCase();
+
+      const matchSearch = !query || name.includes(query) || role.includes(query) || dept.toLowerCase().includes(query) || email.includes(query) || skills.includes(query);
+      const matchDept = hubActiveDept === 'all' || dept === hubActiveDept;
+      const matchStatus = statusVal === 'all' || status === statusVal;
+
+      const isMatch = matchSearch && matchDept && matchStatus;
+
+      card.style.display = isMatch ? 'flex' : 'none';
+      if (rows[idx]) rows[idx].style.display = isMatch ? '' : 'none';
+
+      if (isMatch) visibleCount++;
+    });
+
+    document.getElementById('hubVisibleCount').textContent = visibleCount;
+
+    const empty = document.getElementById('hubEmptyState');
+    const grid = document.getElementById('hubCardsGrid');
+    const tbl = document.getElementById('hubTableWrapper');
+
+    if (visibleCount === 0) {
+      empty.style.display = 'block';
+      grid.style.display = 'none';
+      tbl.style.display = 'none';
+    } else {
+      empty.style.display = 'none';
+      if (hubActiveView === 'grid') {
+        grid.style.display = 'grid';
+        tbl.style.display = 'none';
+      } else {
+        grid.style.display = 'none';
+        tbl.style.display = 'block';
+      }
+    }
+  }
+
+  function resetHubFilters() {
+    document.getElementById('hubSearchInput').value = '';
+    document.getElementById('hubStatusFilter').value = 'all';
+    selectDepartmentTab('all', document.querySelector('.dept-tab'));
+  }
+
+  function selectDepartmentTab(dept, btn) {
+    hubActiveDept = dept;
+    document.querySelectorAll('.dept-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterHubEmployees();
+  }
+
+  function filterByQuickScope(dept, e) {
+    e.preventDefault();
+    hubActiveDept = dept;
+    document.querySelectorAll('.dept-tab').forEach(b => {
+      if (b.textContent.includes(dept)) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    filterHubEmployees();
+  }
+
+  function switchHubView(mode) {
+    hubActiveView = mode;
+    const btnGrid = document.getElementById('btnModeGrid');
+    const btnTable = document.getElementById('btnModeTable');
+    const grid = document.getElementById('hubCardsGrid');
+    const tbl = document.getElementById('hubTableWrapper');
+
+    if (mode === 'grid') {
+      btnGrid.classList.add('active');
+      btnTable.classList.remove('active');
+      grid.style.display = 'grid';
+      tbl.style.display = 'none';
+    } else {
+      btnTable.classList.add('active');
+      btnGrid.classList.remove('active');
+      grid.style.display = 'none';
+      tbl.style.display = 'block';
+    }
+    filterHubEmployees();
+  }
+
+  // Modals & Drawers
+  function openCreateModal() {
+    hubEditingElem = null;
+    document.getElementById('modalHeadingText').textContent = 'Add New Employee';
+    document.getElementById('modalDescText').textContent = 'Fill out the fields below to register a new member.';
+    document.getElementById('hubSubmitBtn').textContent = 'Save Employee';
+    document.getElementById('hubForm').reset();
+    document.getElementById('hubEmpId').value = '';
+    document.getElementById('hubStatus').value = 'Active';
+    document.getElementById('hubLocation').value = 'Phnom Penh';
+    document.getElementById('hubFormModal').classList.add('open');
+    document.getElementById('hubName').focus();
+  }
+
+  function openEditModal(elem) {
+    hubEditingElem = elem;
+    document.getElementById('modalHeadingText').textContent = 'Edit Employee';
+    document.getElementById('modalDescText').textContent = 'Update employee details and preferences.';
+    document.getElementById('hubSubmitBtn').textContent = 'Update Profile';
+
+    document.getElementById('hubEmpId').value = elem.getAttribute('data-id') || '';
+    document.getElementById('hubName').value = elem.getAttribute('data-name') || '';
+    document.getElementById('hubRole').value = elem.getAttribute('data-role') || '';
+    document.getElementById('hubDept').value = elem.getAttribute('data-dept') || 'Engineering';
+    document.getElementById('hubStatus').value = elem.getAttribute('data-status') || 'Active';
+    document.getElementById('hubEmail').value = elem.getAttribute('data-email') || '';
+    document.getElementById('hubPhone').value = elem.getAttribute('data-phone') || '';
+    document.getElementById('hubLocation').value = elem.getAttribute('data-location') || '';
+    document.getElementById('hubJoinDate').value = elem.getAttribute('data-joindate') || '';
+    document.getElementById('hubSkills').value = elem.getAttribute('data-skills') || '';
+    document.getElementById('hubBio').value = elem.getAttribute('data-bio') || '';
+
+    document.getElementById('hubFormModal').classList.add('open');
+  }
+
+  function closeHubModal() {
+    document.getElementById('hubFormModal').classList.remove('open');
+  }
+
+  function closeHubModalIfBackdrop(e) {
+    if (e.target.id === 'hubFormModal') closeHubModal();
+  }
+
+  function peekEmployeeProfile(elem) {
+    const name = elem.getAttribute('data-name') || '';
+    const role = elem.getAttribute('data-role') || '';
+    const dept = elem.getAttribute('data-dept') || '';
+    const status = elem.getAttribute('data-status') || 'Active';
+    const email = elem.getAttribute('data-email') || '';
+    const phone = elem.getAttribute('data-phone') || 'N/A';
+    const location = elem.getAttribute('data-location') || 'N/A';
+    const joinDate = elem.getAttribute('data-joindate') || 'N/A';
+    const bio = elem.getAttribute('data-bio') || 'No bio information provided for this member.';
+    const skillsStr = elem.getAttribute('data-skills') || '';
+    const avatarColor = elem.getAttribute('data-avatarcolor') || 'linear-gradient(135deg, #4f46e5, #7c3aed)';
+
+    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+    document.getElementById('drawerAvatar').textContent = initials;
+    document.getElementById('drawerAvatar').style.background = avatarColor;
+    document.getElementById('drawerName').textContent = name;
+    document.getElementById('drawerRole').textContent = role;
+    document.getElementById('drawerDept').textContent = dept;
+    document.getElementById('drawerDept').className = `dept-badge badge-${dept.toLowerCase()}`;
+    
+    document.getElementById('drawerStatus').textContent = status;
+    document.getElementById('drawerStatusChip').className = `status-chip ${status === 'Active' ? 'status-active' : 'status-leave'}`;
+
+    document.getElementById('drawerBio').textContent = bio;
+    document.getElementById('drawerEmail').textContent = email;
+    document.getElementById('drawerEmail').href = `mailto:${email}`;
+    document.getElementById('drawerPhone').textContent = phone;
+    document.getElementById('drawerLocation').textContent = location;
+    document.getElementById('drawerJoinDate').textContent = joinDate;
+
+    // Skills
+    const sBox = document.getElementById('drawerSkillsContainer');
+    sBox.innerHTML = '';
+    if (skillsStr.trim()) {
+      skillsStr.split(',').forEach(s => {
+        if (s.trim()) {
+          const span = document.createElement('span');
+          span.className = 'skill-tag';
+          span.textContent = s.trim();
+          sBox.appendChild(span);
+        }
+      });
+    } else {
+      sBox.innerHTML = '<span class="text-subtle" style="font-size: 0.85rem;">No skills specified</span>';
+    }
+
+    document.getElementById('drawerEditBtn').onclick = () => {
+      closeHubDrawer();
+      openEditModal(elem);
+    };
+
+    document.getElementById('hubDrawerBackdrop').classList.add('open');
+  }
+
+  function closeHubDrawer() {
+    document.getElementById('hubDrawerBackdrop').classList.remove('open');
+  }
+
+  function closeDrawerIfBackdrop(e) {
+    if (e.target.id === 'hubDrawerBackdrop') closeHubDrawer();
+  }
+
+  function submitHubEmployee(e) {
+    e.preventDefault();
+    const name = document.getElementById('hubName').value.trim();
+    const role = document.getElementById('hubRole').value.trim();
+    const dept = document.getElementById('hubDept').value;
+    const status = document.getElementById('hubStatus').value;
+    const email = document.getElementById('hubEmail').value.trim();
+    const phone = document.getElementById('hubPhone').value.trim();
+    const location = document.getElementById('hubLocation').value.trim();
+    const joinDate = document.getElementById('hubJoinDate').value.trim() || 'Sep 2026';
+    const skills = document.getElementById('hubSkills').value.trim();
+    const bio = document.getElementById('hubBio').value.trim() || 'Staff member at Company.';
+
+    if (!name || !role || !email) return;
+
+    const gradients = [
+      'linear-gradient(135deg, #4f46e5, #7c3aed)',
+      'linear-gradient(135deg, #06b6d4, #0284c7)',
+      'linear-gradient(135deg, #10b981, #059669)',
+      'linear-gradient(135deg, #f59e0b, #d97706)',
+      'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+      'linear-gradient(135deg, #ec4899, #be185d)'
+    ];
+    const randColor = gradients[Math.floor(Math.random() * gradients.length)];
+    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+    if (hubEditingElem) {
+      const el = hubEditingElem;
+      el.setAttribute('data-name', name);
+      el.setAttribute('data-role', role);
+      el.setAttribute('data-dept', dept);
+      el.setAttribute('data-status', status);
+      el.setAttribute('data-email', email);
+      el.setAttribute('data-phone', phone);
+      el.setAttribute('data-location', location);
+      el.setAttribute('data-joindate', joinDate);
+      el.setAttribute('data-skills', skills);
+      el.setAttribute('data-bio', bio);
+
+      const nameNode = el.querySelector('.card-emp-name, .t-name');
+      if (nameNode) nameNode.textContent = name;
+      const roleNode = el.querySelector('.card-emp-role, .font-600');
+      if (roleNode) roleNode.textContent = role;
+      const deptNode = el.querySelector('.dept-badge');
+      if (deptNode) {
+        deptNode.textContent = dept;
+        deptNode.className = `dept-badge badge-${dept.toLowerCase()}`;
+      }
+      const chipNode = el.querySelector('.status-chip');
+      if (chipNode) {
+        chipNode.className = `status-chip ${status === 'Active' ? 'status-active' : 'status-leave'}`;
+        chipNode.innerHTML = `<span class="chip-dot"></span> ${status}`;
+      }
+
+      showHubToast(`Updated profile for ${name}`);
+    } else {
+      const grid = document.getElementById('hubCardsGrid');
+      const tableBody = document.getElementById('hubTableBody');
+      const newCard = document.createElement('div');
+      newCard.className = 'hub-emp-card';
+      const id = Date.now();
+      newCard.setAttribute('data-id', id);
+      newCard.setAttribute('data-name', name);
+      newCard.setAttribute('data-role', role);
+      newCard.setAttribute('data-dept', dept);
+      newCard.setAttribute('data-status', status);
+      newCard.setAttribute('data-email', email);
+      newCard.setAttribute('data-phone', phone);
+      newCard.setAttribute('data-location', location);
+      newCard.setAttribute('data-joindate', joinDate);
+      newCard.setAttribute('data-skills', skills);
+      newCard.setAttribute('data-bio', bio);
+      newCard.setAttribute('data-avatarcolor', randColor);
+
+      newCard.innerHTML = `
+        <div class="card-accent-bar" style="background: ${randColor};"></div>
+        <div class="card-inner-content">
+          <div class="card-top-row">
+            <div class="card-avatar" style="background: ${randColor};">${initials}</div>
+            <span class="status-chip ${status === 'Active' ? 'status-active' : 'status-leave'}">
+              <span class="chip-dot"></span>
+              ${status}
+            </span>
+          </div>
+          <div class="card-profile-meta">
+            <h3 class="card-emp-name" onclick="peekEmployeeProfile(this.closest('.hub-emp-card'))">${name}</h3>
+            <p class="card-emp-role">${role}</p>
+            <div class="card-badge-row">
+              <span class="dept-badge badge-${dept.toLowerCase()}">${dept}</span>
+              <span class="joined-badge">${joinDate}</span>
+            </div>
+          </div>
+          <div class="card-info-list">
+            <a href="mailto:${email}" class="card-info-item" title="Send Email">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>${email}</span>
+            </a>
+            <div class="card-info-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>${location}</span>
+            </div>
+          </div>
+          <div class="card-bottom-actions">
+            <button class="btn-card-primary" onclick="peekEmployeeProfile(this.closest('.hub-emp-card'))">Profile</button>
+            <button class="btn-card-icon" onclick="openEditModal(this.closest('.hub-emp-card'))" title="Edit Employee">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button class="btn-card-icon delete-icon" onclick="deleteHubEmployee(this.closest('.hub-emp-card'))" title="Delete Employee">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+      grid.prepend(newCard);
+
+      // Add to table
+      const newRow = document.createElement('tr');
+      newRow.className = 'hub-table-row';
+      newRow.setAttribute('data-id', id);
+      newRow.setAttribute('data-name', name);
+      newRow.setAttribute('data-role', role);
+      newRow.setAttribute('data-dept', dept);
+      newRow.setAttribute('data-status', status);
+      newRow.setAttribute('data-email', email);
+      newRow.setAttribute('data-phone', phone);
+      newRow.setAttribute('data-location', location);
+      newRow.setAttribute('data-joindate', joinDate);
+      newRow.setAttribute('data-skills', skills);
+      newRow.setAttribute('data-bio', bio);
+      newRow.setAttribute('data-avatarcolor', randColor);
+
+      newRow.innerHTML = `
+        <td>
+          <div class="t-user-cell" onclick="peekEmployeeProfile(this.closest('.hub-table-row'))">
+            <div class="t-avatar" style="background: ${randColor};">${initials}</div>
+            <div>
+              <div class="t-name">${name}</div>
+              <div class="t-email">${email}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="dept-badge badge-${dept.toLowerCase()}">${dept}</span></td>
+        <td class="font-600">${role}</td>
+        <td class="text-subtle">${location}</td>
+        <td>
+          <span class="status-chip ${status === 'Active' ? 'status-active' : 'status-leave'}">
+            <span class="chip-dot"></span>
+            ${status}
+          </span>
+        </td>
+        <td class="text-subtle">${joinDate}</td>
+        <td class="text-right">
+          <div class="t-actions">
+            <button class="t-action-btn" onclick="peekEmployeeProfile(this.closest('.hub-table-row'))">View</button>
+            <button class="t-action-btn" onclick="openEditModal(this.closest('.hub-table-row'))">Edit</button>
+            <button class="t-action-btn delete-btn" onclick="deleteHubEmployee(this.closest('.hub-table-row'))">Delete</button>
+          </div>
+        </td>
+      `;
+      tableBody.prepend(newRow);
+
+      const deckTotal = document.getElementById('deckTotal');
+      if (deckTotal) deckTotal.textContent = parseInt(deckTotal.textContent || '0') + 1;
+      const sbTotal = document.getElementById('sidebarTotalCount');
+      if (sbTotal) sbTotal.textContent = parseInt(sbTotal.textContent || '0') + 1;
+
+      showHubToast(`Added ${name} to directory!`);
+    }
+
+    closeHubModal();
+    filterHubEmployees();
+  }
+
+  function deleteHubEmployee(elem) {
+    const name = elem.getAttribute('data-name') || 'this member';
+    if (confirm(`Remove ${name} from employee records?`)) {
+      const id = elem.getAttribute('data-id');
+      document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.remove());
+
+      const deckTotal = document.getElementById('deckTotal');
+      if (deckTotal) deckTotal.textContent = Math.max(0, parseInt(deckTotal.textContent || '1') - 1);
+      const sbTotal = document.getElementById('sidebarTotalCount');
+      if (sbTotal) sbTotal.textContent = Math.max(0, parseInt(sbTotal.textContent || '1') - 1);
+
+      showHubToast(`Removed ${name}`);
+      filterHubEmployees();
+    }
+  }
+
+  function exportDirectoryCSV() {
+    const cards = document.querySelectorAll('.hub-emp-card');
+    let csv = "ID,Name,Role,Department,Status,Email,Phone,Location,JoinDate,Skills\n";
+    cards.forEach(c => {
+      csv += [
+        c.getAttribute('data-id'),
+        `"${c.getAttribute('data-name')}"`,
+        `"${c.getAttribute('data-role')}"`,
+        `"${c.getAttribute('data-dept')}"`,
+        `"${c.getAttribute('data-status')}"`,
+        `"${c.getAttribute('data-email')}"`,
+        `"${c.getAttribute('data-phone')}"`,
+        `"${c.getAttribute('data-location')}"`,
+        `"${c.getAttribute('data-joindate')}"`,
+        `"${(c.getAttribute('data-skills') || '').replace(/"/g, '""')}"`
+      ].join(",") + "\n";
+    });
+
+    const link = document.createElement("a");
+    link.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    link.download = `WorkPulse_Employees_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showHubToast("Directory exported to CSV!");
+  }
+
+  function showHubToast(msg) {
+    const t = document.getElementById('hubToast');
+    const m = document.getElementById('hubToastMsg');
+    if (t && m) {
+      m.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+  }
+</script>
