@@ -66,5 +66,5 @@ group :test do
 end
 
 # Add postgres Gem for database connection
-gem "pg", "~> 1.1"
+gem "pg", "~> 1.7"
 
